@@ -62,6 +62,6 @@ t1 = Thread(target = check_favorites)
 t1.setDaemon(True)
 t1.start()
 
-bot.polling(none_stop=False)
+bot.polling(none_stop=True)
 bot.send_message(config.channel, "OLX script succesfully started")
 notify("OLX script", "OLX script succesfully started")
