@@ -62,6 +62,12 @@ t1 = Thread(target = check_favorites)
 t1.setDaemon(True)
 t1.start()
 
-bot.polling(none_stop=True)
+while True:
+    try:
+        bot.polling(none_stop=True)
+    except Exception as e:
+        print("Catched telebot error") 
+        time.sleep(15)
+
 bot.send_message(config.channel, "OLX script succesfully started")
 notify("OLX script", "OLX script succesfully started")
