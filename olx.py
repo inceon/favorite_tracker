@@ -3,12 +3,42 @@ import time
 import pync
 import config
 import telebot
+import random
 from threading import Thread
 from bs4 import BeautifulSoup
 
-def get_html(site):
-    r = requests.get(site, cookies=dict(PHPSESSID=config.olx_session))
-    return r.text
+print("My current ip:", requests.get(config.get_ip_service).text)
+
+current_proxy = random.choice(config.olx_proxies)
+print('{0} {1}'.format("Proxy ip:", requests.get(config.get_ip_service, proxies = {"https" : current_proxy }).text))
+
+def get_html(site, changeProxy = False):
+	headers = {"User-Agent": ""}
+	if config.USER_AGENT_LIST:
+		headers = {"User-Agent": random.choice(config.USER_AGENT_LIST)}
+
+	if changeProxy:
+		current_proxy = random.choice(config.olx_proxies)
+		try:
+			print('{0} {1}'.format("Proxy ip:", requests.get(config.get_ip_service, proxies = {"https" : current_proxy }).text))
+		except Exception:
+			print('{0} {1}'.format("Lol, not valid proxy:", current_proxy))
+
+	try:
+		r = requests.get(
+			site, 
+			cookies = dict(PHPSESSID=config.olx_session),
+			proxies = {
+				"https" : current_proxy
+			},
+			headers = headers,
+			timeout = 10
+		)
+	except Exception:
+		print("Connection problem")
+		return get_html(site, True)
+	else:
+		return r.text
 
 def get_page_data(html):
     soup = BeautifulSoup(html, 'lxml')
@@ -55,7 +85,7 @@ def check_favorites():
 					notify(category, has_new.text.split(":")[1].strip())
 
 		print("Last check " + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))			
-		time.sleep(60)
+		time.sleep(120)
 
 
 t1 = Thread(target = check_favorites)
