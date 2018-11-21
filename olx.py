@@ -71,7 +71,7 @@ def check_favorites():
 		site_username = page_data.find(class_ = "userbox-login").text.strip()
 		if site_username != config.olx_username:
 			notify("OLX script", "We have problem with authorization")
-			bot.send_message(config.channel, "We have problem with authorization")
+			bot.send_message(config.channel, "We have problem with authorization. Username is {0}".format(site_username))
 		else:
 			new_ads_data = page_data.find_all(class_ = "observedsearch")
 
