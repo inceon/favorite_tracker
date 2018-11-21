@@ -75,6 +75,9 @@ def check_favorites():
 		else:
 			new_ads_data = page_data.find_all(class_ = "observedsearch")
 
+			if len(new_ads_data) == 0:
+				print("Looks loke we don't have favorites :(")
+
 			for (idx, el) in enumerate(new_ads_data):
 				# notify_text = "[" + str(idx+1) + "] " + el.text.split(":")[1].strip();
 				has_new = el.find(class_ = "newAds")
