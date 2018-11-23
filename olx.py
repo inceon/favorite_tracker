@@ -24,7 +24,7 @@ def remove_proxy(url):
 
 	# remove equal proxy url
 	olx_proxies_list = list(set(olx_proxies_list))
-	with open(config.olx_proxies_list_file, "w") as fp:
+	with open(config.olx_proxies_file, "w") as fp:
 		fp.write("\n".join(olx_proxies_list))
 
 	current_proxy = random.choice(olx_proxies_list)
