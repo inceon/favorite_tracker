@@ -11,7 +11,13 @@ def read_proxy_file():
 	with open(config.olx_proxies_file, "r+") as fp:
 		return fp.read().splitlines()
 
+olx_proxies_list = read_proxy_file()
+current_proxy = random.choice(olx_proxies_list)
+
 def remove_proxy(url):
+	global current_proxy
+	global olx_proxies_list
+
 	olx_proxies_list.remove(url)
 	new_proxy_list = parse_new_proxies()
 	olx_proxies_list.extend(new_proxy_list)
@@ -20,6 +26,8 @@ def remove_proxy(url):
 	olx_proxies_list = list(set(olx_proxies_list))
 	with open(config.olx_proxies_list_file, "w") as fp:
 		fp.write("\n".join(olx_proxies_list))
+
+	current_proxy = random.choice(olx_proxies_list)
 
 def parse_new_proxies():
 	try:
@@ -37,6 +45,9 @@ def parse_new_proxies():
 		print("We have problems with parsing new proxy")
 
 def get_html(site, changeProxy = False):
+	global current_proxy
+	global olx_proxies_list
+
 	headers = {"User-Agent": ""}
 	if config.USER_AGENT_LIST:
 		headers = {"User-Agent": random.choice(config.USER_AGENT_LIST)}
@@ -60,7 +71,8 @@ def get_html(site, changeProxy = False):
 			timeout = 10
 		)
 	except Exception:
-		print("Connection problem")
+		print("Connection problem with: {0}".format(current_proxy))
+		remove_proxy(current_proxy)
 		return get_html(site, True)
 	else:
 		return r.text
@@ -83,11 +95,17 @@ def notify(title, text):
 
 ### BOT LOGIC ###
 
-print("My current ip:", requests.get(config.get_ip_service).text)
+def check_ip():
+	try:
+		ip_text = requests.get(config.get_ip_service, proxies = {"https" : current_proxy }).text
+		print('{0} {1}'.format("Proxy ip:", ip_text))
+	except Exception:
+		print("Removed proxy: {0}".format(current_proxy))
+		remove_proxy(current_proxy)
+		check_ip()
 
-olx_proxies_list = read_proxy_file()
-current_proxy = random.choice(olx_proxies_list)
-print('{0} {1}'.format("Proxy ip:", requests.get(config.get_ip_service, proxies = {"https" : current_proxy }).text))
+print("My current ip:", requests.get(config.get_ip_service).text)
+check_ip()
 
 bot = telebot.TeleBot(config.token)
 
@@ -136,5 +154,4 @@ while True:
         print("Catched telebot error") 
         time.sleep(15)
 
-bot.send_message(config.channel, "OLX script succesfully started")
 notify("OLX script", "OLX script succesfully started")
