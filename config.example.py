@@ -6,9 +6,8 @@ olx_url = "https://www.olx.ua/favorites/search/"
 olx_session = "PHSESSION on OLX"
 olx_username = "olx_username"
 olx_favicon = "https://static-olxeu.akamaized.net/static/olxua/naspersclassifieds-regional/olxeu-atlas-web-olxua/static/img/favicon.ico?v=4"
-olx_proxies = [
-    "https://url.to.proxy"
-]
+olx_proxies_file = "proxy_list.txt"
+proxy_list_url = "https://free-proxy-list.net/anonymous-proxy.html"
 USER_AGENT_LIST = [
     "User Agent"
 ]

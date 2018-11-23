@@ -7,10 +7,34 @@ import random
 from threading import Thread
 from bs4 import BeautifulSoup
 
-print("My current ip:", requests.get(config.get_ip_service).text)
+def read_proxy_file():
+	with open(config.olx_proxies_file, "r+") as fp:
+		return fp.read().splitlines()
 
-current_proxy = random.choice(config.olx_proxies)
-print('{0} {1}'.format("Proxy ip:", requests.get(config.get_ip_service, proxies = {"https" : current_proxy }).text))
+def remove_proxy(url):
+	olx_proxies_list.remove(url)
+	new_proxy_list = parse_new_proxies()
+	olx_proxies_list.extend(new_proxy_list)
+
+	# remove equal proxy url
+	olx_proxies_list = list(set(olx_proxies_list))
+	with open(config.olx_proxies_list_file, "w") as fp:
+		fp.write("\n".join(olx_proxies_list))
+
+def parse_new_proxies():
+	try:
+		res = requests.get(config.proxy_list_url)
+		parsed_res = BeautifulSoup(res.text, 'lxml')
+
+		new_proxy_list = []
+		for proxy in parsed_res.find(id = "proxylisttable").find_all("tr")[1:-1]:
+			proxy_info = proxy.find_all("td")
+			if(proxy_info[6].text == "yes"):
+				new_proxy_list.append("https://{0}:{1}".format(proxy_info[0].text, proxy_info[1].text))
+
+		return new_proxy_list
+	except Exception:
+		print("We have problems with parsing new proxy")
 
 def get_html(site, changeProxy = False):
 	headers = {"User-Agent": ""}
@@ -18,11 +42,12 @@ def get_html(site, changeProxy = False):
 		headers = {"User-Agent": random.choice(config.USER_AGENT_LIST)}
 
 	if changeProxy:
-		current_proxy = random.choice(config.olx_proxies)
+		current_proxy = random.choice(olx_proxies_list)
 		try:
 			print('{0} {1}'.format("Proxy ip:", requests.get(config.get_ip_service, proxies = {"https" : current_proxy }).text))
 		except Exception:
 			print('{0} {1}'.format("Lol, not valid proxy:", current_proxy))
+			remove_proxy(current_proxy)
 
 	try:
 		r = requests.get(
@@ -54,6 +79,15 @@ def notify(title, text):
 		appIcon = favicon_link,
 		sound   = main_sound_name,
 		open  	= open_link)  
+
+
+### BOT LOGIC ###
+
+print("My current ip:", requests.get(config.get_ip_service).text)
+
+olx_proxies_list = read_proxy_file()
+current_proxy = random.choice(olx_proxies_list)
+print('{0} {1}'.format("Proxy ip:", requests.get(config.get_ip_service, proxies = {"https" : current_proxy }).text))
 
 bot = telebot.TeleBot(config.token)
 
