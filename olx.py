@@ -7,6 +7,10 @@ import random
 from threading import Thread
 from bs4 import BeautifulSoup
 
+def log(text):
+	current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+	print("{0} - {1}".format(current_time, text))
+
 def read_proxy_file():
 	with open(config.olx_proxies_file, "r+") as fp:
 		return fp.read().splitlines()
@@ -42,7 +46,7 @@ def parse_new_proxies():
 
 		return new_proxy_list
 	except Exception:
-		print("We have problems with parsing new proxy")
+		log("We have problems with parsing new proxy")
 
 def get_html(site, changeProxy = False):
 	global current_proxy
@@ -55,9 +59,9 @@ def get_html(site, changeProxy = False):
 	if changeProxy:
 		current_proxy = random.choice(olx_proxies_list)
 		try:
-			print('{0} {1}'.format("Proxy ip:", requests.get(config.get_ip_service, proxies = {"https" : current_proxy }).text))
+			log('{0} {1}'.format("Proxy ip:", requests.get(config.get_ip_service, proxies = {"https" : current_proxy }).text))
 		except Exception:
-			print('{0} {1}'.format("Lol, not valid proxy:", current_proxy))
+			log('{0} {1}'.format("Lol, not valid proxy:", current_proxy))
 			remove_proxy(current_proxy)
 
 	try:
@@ -71,7 +75,7 @@ def get_html(site, changeProxy = False):
 			timeout = 10
 		)
 	except Exception:
-		print("Connection problem with: {0}".format(current_proxy))
+		log("Connection problem with: {0}".format(current_proxy))
 		remove_proxy(current_proxy)
 		return get_html(site, True)
 	else:
@@ -98,13 +102,13 @@ def notify(title, text):
 def check_ip():
 	try:
 		ip_text = requests.get(config.get_ip_service, proxies = {"https" : current_proxy }).text
-		print('{0} {1}'.format("Proxy ip:", ip_text))
+		log('{0} {1}'.format("Proxy ip:", ip_text))
 	except Exception:
-		print("Removed proxy: {0}".format(current_proxy))
+		log("Removed proxy: {0}".format(current_proxy))
 		remove_proxy(current_proxy)
 		check_ip()
 
-print("My current ip:", requests.get(config.get_ip_service).text)
+log("My current ip: {0}".format(requests.get(config.get_ip_service).text))
 check_ip()
 
 bot = telebot.TeleBot(config.token)
@@ -128,7 +132,7 @@ def check_favorites():
 			new_ads_data = page_data.find_all(class_ = "observedsearch")
 
 			if len(new_ads_data) == 0:
-				print("Looks loke we don't have favorites :(")
+				log("Looks loke we don't have favorites :(")
 
 			for (idx, el) in enumerate(new_ads_data):
 				# notify_text = "[" + str(idx+1) + "] " + el.text.split(":")[1].strip();
@@ -136,10 +140,10 @@ def check_favorites():
 				category = el.find(class_ = "fbold").text
 
 				if has_new:
-					print(has_new.text)
+					log(has_new.text)
 					notify(category, has_new.text.split(":")[1].strip())
 
-		print("Last check " + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))			
+		log("latest check")			
 		time.sleep(120)
 
 
