@@ -48,6 +48,13 @@ def parse_new_proxies():
 	except Exception:
 		log("We have problems with parsing new proxy")
 
+def remove_and_change_proxy():
+	global current_proxy
+	global olx_proxies_list
+
+	remove_proxy(current_proxy)
+	current_proxy = random.choice(olx_proxies_list)
+
 def get_html(site, changeProxy = False):
 	global current_proxy
 	global olx_proxies_list
@@ -57,12 +64,12 @@ def get_html(site, changeProxy = False):
 		headers = {"User-Agent": random.choice(config.USER_AGENT_LIST)}
 
 	if changeProxy:
-		current_proxy = random.choice(olx_proxies_list)
+		remove_and_change_proxy()
 		try:
 			log('{0} {1}'.format("Proxy ip:", requests.get(config.get_ip_service, proxies = {"https" : current_proxy }).text))
 		except Exception:
 			log('{0} {1}'.format("Lol, not valid proxy:", current_proxy))
-			remove_proxy(current_proxy)
+			return get_html(site, True)
 
 	try:
 		r = requests.get(
@@ -76,7 +83,6 @@ def get_html(site, changeProxy = False):
 		)
 	except Exception:
 		log("Connection problem with: {0}".format(current_proxy))
-		remove_proxy(current_proxy)
 		return get_html(site, True)
 	else:
 		return r.text
@@ -124,7 +130,12 @@ def check_favorites():
 	while(True):
 		page_html = get_html(config.olx_url)
 		page_data = get_page_data(page_html)
-		site_username = page_data.find(class_ = "userbox-login").text.strip()
+		try:
+			site_username = page_data.find(class_ = "userbox-login").text.strip()
+		except Exception:
+			remove_and_change_proxy()
+			continue
+
 		if site_username != config.olx_username:
 			notify("OLX script", "We have problem with authorization")
 			bot.send_message(config.channel, "We have problem with authorization. Username is {0}".format(site_username))
